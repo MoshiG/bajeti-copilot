@@ -1,0 +1,51 @@
+# Bajeti Copilot — default configuration.
+# Ablation configs in configs/ablations/ override only the keys they change.
+
+llm:
+  # Any OpenAI-compatible endpoint: a vLLM server on a rented GPU, or a hosted API.
+  base_url: "http://localhost:8000/v1"
+  model: "Qwen/Qwen2.5-7B-Instruct"
+  api_key_env: "BAJETI_API_KEY"   # name of the env var holding the key, never the key itself
+  temperature: 0.0                # deterministic answers make evaluation repeatable
+  max_tokens: 1024
+  timeout_s: 120
+
+paths:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  index_dir: "data/index"
+  sqlite_path: "data/index/budget.sqlite"
+  gold_set: "eval/gold.jsonl"
+  results_dir: "eval/results"
+
+ingest:
+  chunking: "structured"          # "naive" (fixed windows) or "structured" (sections + tables)
+  chunk_tokens: 400
+  chunk_overlap: 60
+  ocr_fallback: true
+
+retrieval:
+  use_bm25: true
+  use_dense: true
+  use_reranker: true
+  embedding_model: "BAAI/bge-m3"
+  reranker_model: "BAAI/bge-reranker-v2-m3"
+  candidates: 30                  # pulled from each retriever before fusion
+  top_k: 6                        # passed to the LLM after reranking
+
+tools:
+  enable_sql: true
+  enable_optimizer: true
+
+agent:
+  max_steps: 5                    # tool-call rounds before the agent must answer
+  require_citations: true
+
+# Optional: a judge model for faithfulness scoring (`bajeti eval --judge`). Use a different,
+# preferably larger, model than the one answering; a model grading itself tends to be lenient.
+# judge:
+#   base_url: "https://api.example.com/v1"
+#   model: "a-larger-model"
+#   api_key_env: "BAJETI_JUDGE_API_KEY"
+#   temperature: 0.0
+#   max_tokens: 300

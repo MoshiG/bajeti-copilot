@@ -1,0 +1,112 @@
+# Bajeti Copilot corpus manifest.
+#
+# Every document the copilot can cite is listed here with where it came from. Nothing is
+# committed to git; `make fetch` downloads into data/raw/ and records a SHA-256 for each file
+# in data/raw/manifest.lock.json so a run can be reproduced exactly.
+#
+# Source kinds:
+#   url:          a direct PDF link
+#   dspace_item:  a Ministry of Finance repository item (repository.mof.go.tz); the script asks
+#                 the repository's REST API for the file whose name contains `file_match`
+#   manual: true  no stable link yet; download it from `page` and save as data/raw/<id>.pdf
+#
+# Fields: id, title, doc_type (speech | finance_act | estimates), fiscal_year, language (sw | en)
+
+repository_api: "https://repository.mof.go.tz/server/api"
+
+documents:
+  # --- Budget speeches -----------------------------------------------------------------------
+  - id: speech_2025_26_sw
+    title: "Hotuba ya Bajeti Kuu ya Serikali 2025/26"
+    doc_type: speech
+    fiscal_year: "2025/26"
+    language: sw
+    manual: true
+    page: "https://repository.mof.go.tz/collections/1f99dbcb-70c7-4458-9496-2097d6f0f0db"
+
+  - id: speech_2025_26_en
+    title: "Government Budget Speech 2025/26"
+    doc_type: speech
+    fiscal_year: "2025/26"
+    language: en
+    manual: true
+    page: "https://repository.mof.go.tz/collections/1f99dbcb-70c7-4458-9496-2097d6f0f0db"
+
+  - id: speech_2024_25_sw
+    title: "Hotuba ya Bajeti Kuu ya Serikali 2024/25"
+    doc_type: speech
+    fiscal_year: "2024/25"
+    language: sw
+    manual: true
+    page: "https://repository.mof.go.tz/collections/1f99dbcb-70c7-4458-9496-2097d6f0f0db"
+
+  - id: speech_2021_22_sw
+    title: "Hotuba ya Bajeti Kuu ya Serikali 2021/22"
+    doc_type: speech
+    fiscal_year: "2021/22"
+    language: sw
+    url: "https://www.mof.go.tz/uploads/documents/en-1676534563-HOTUBA YA BAJETI KUU MWAKA 2021-22.pdf"
+
+  - id: speech_2021_22_en
+    title: "Speech of Government Budget 2021/22"
+    doc_type: speech
+    fiscal_year: "2021/22"
+    language: en
+    dspace_item: "ef159785-3e00-4613-9099-bd65de76ec49"
+    file_match: "SPEECH OF GOVERNMENT BUDGET"
+    page: "https://repository.mof.go.tz/items/ef159785-3e00-4613-9099-bd65de76ec49/full"
+
+  - id: speech_2020_21_en
+    title: "Speech of Government Budget 2020/21"
+    doc_type: speech
+    fiscal_year: "2020/21"
+    language: en
+    dspace_item: "a0163214-8b28-4583-b6d0-92203ca1d930"
+    file_match: "SPEECH"
+    page: "https://repository.mof.go.tz/items/a0163214-8b28-4583-b6d0-92203ca1d930/full"
+
+  - id: speech_2019_20_en
+    title: "Speech of Government Budget 2019/20"
+    doc_type: speech
+    fiscal_year: "2019/20"
+    language: en
+    dspace_item: "25c7d7e1-34f4-4d8e-8982-219000f428d1"
+    file_match: "SPEECH"
+    page: "https://repository.mof.go.tz/items/25c7d7e1-34f4-4d8e-8982-219000f428d1/full"
+
+  - id: speech_2018_19_sw
+    title: "Hotuba ya Bajeti Kuu ya Serikali 2018/19"
+    doc_type: speech
+    fiscal_year: "2018/19"
+    language: sw
+    url: "https://www.mof.go.tz/uploads/documents/en-1676534855-HOTUBA YA BAJETI KUU MWAKA 2018-19.pdf"
+
+  # --- Finance Acts --------------------------------------------------------------------------
+  - id: finance_act_2025
+    title: "The Finance Act, 2025"
+    doc_type: finance_act
+    fiscal_year: "2025/26"
+    language: en
+    url: "https://www.mof.go.tz/uploads/text-editor/files/FINANCE ACT 2025_1750842655.pdf"
+
+  - id: finance_act_2021
+    title: "The Finance Act, 2021"
+    doc_type: finance_act
+    fiscal_year: "2021/22"
+    language: en
+    url: "https://media.tanzlii.org/media/legislation/47415/source_file/40650f45f1377e7d/tz-act-2021-3-publication-document.pdf"
+
+  # --- Estimates (tables feed the SQL budget database) --------------------------------------
+  - id: volume_iv_2025_26
+    title: "Public Expenditure Estimates, Development Votes (Volume IV), as passed, 2025/26"
+    doc_type: estimates
+    fiscal_year: "2025/26"
+    language: en
+    url: "https://www.mof.go.tz/uploads/documents/en-1753972311-Volume IV As Passed by the Parliament.pdf"
+
+  - id: volume_iv_2026_27
+    title: "Public Expenditure Estimates, Development Votes (Volume IV), as passed, 2026/27"
+    doc_type: estimates
+    fiscal_year: "2026/27"
+    language: en
+    url: "https://www.mof.go.tz/uploads/documents/en-1785135497-Volume IV As Passed by the Parliament .pdf"

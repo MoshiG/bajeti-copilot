@@ -1,0 +1,5 @@
+# Row 1 — the baseline most RAG demos ship: fixed-size chunks, dense retrieval only.
+name: a1_naive_dense
+ingest: {chunking: naive}
+retrieval: {use_bm25: false, use_dense: true, use_reranker: false}
+tools: {enable_sql: false, enable_optimizer: false}

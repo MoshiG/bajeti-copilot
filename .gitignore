@@ -1,0 +1,15 @@
+__pycache__/
+*.egg-info/
+.venv/
+.pytest_cache/
+.coverage
+.env
+# Corpus is downloaded by scripts/fetch_corpus.py, never committed
+data/raw/*
+!data/raw/manifest.lock.json
+data/processed/*
+data/index/*
+!data/**/.gitkeep
+eval/results/*
+!eval/results/.gitkeep
+.ruff_cache/

@@ -1,0 +1,5 @@
+# Row 3 — add a cross-encoder reranker over the fused candidates.
+name: a3_hybrid_rerank
+ingest: {chunking: naive}
+retrieval: {use_bm25: true, use_dense: true, use_reranker: true}
+tools: {enable_sql: false, enable_optimizer: false}

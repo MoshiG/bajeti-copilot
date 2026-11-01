@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bajeti-copilot"
+version = "0.1.0"
+description = "An evaluated RAG copilot over Tanzania's public budget documents (Swahili and English)."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Goodiel Moshi" }]
+requires-python = ">=3.11"
+dependencies = [
+  "pyyaml>=6.0",
+  "openai>=1.40",
+]
+
+[project.optional-dependencies]
+# Heavier stacks are split out so CI and laptops stay light.
+ingest = ["pymupdf>=1.24", "pdfplumber>=0.11", "pytesseract>=0.3"]
+index = ["rank-bm25>=0.2.2", "numpy>=1.26"]
+# Real embeddings pull in PyTorch; install on the GPU pod, not in CI.
+embed = ["sentence-transformers>=3.0"]
+ui = ["gradio>=4.40"]
+dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.6"]
+all = ["bajeti-copilot[ingest,index,embed,ui,dev]"]
+
+[project.scripts]
+bajeti = "bajeti.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

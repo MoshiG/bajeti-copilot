@@ -1,0 +1,5 @@
+# Row 5 — full system: numeric questions go to SQL, prioritisation to the optimiser.
+name: a5_full
+ingest: {chunking: structured}
+retrieval: {use_bm25: true, use_dense: true, use_reranker: true}
+tools: {enable_sql: true, enable_optimizer: true}

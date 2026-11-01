@@ -1,0 +1,5 @@
+# Row 4 — structure-aware chunking: sections and tables kept whole, with page metadata.
+name: a4_structured
+ingest: {chunking: structured}
+retrieval: {use_bm25: true, use_dense: true, use_reranker: true}
+tools: {enable_sql: false, enable_optimizer: false}
