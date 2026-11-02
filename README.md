@@ -49,7 +49,7 @@ flowchart LR
 
 | Stage | What happens | Code |
 |---|---|---|
-| Corpus | 12 documents listed with their sources (see [Data](#data)); SHA-256 lock file | `data/corpus.yaml`, `corpus.py` |
+| Corpus | 14 documents listed with their sources (see [Data](#data)); SHA-256 lock file | `data/corpus.yaml`, `corpus.py` |
 | Parsing | Page numbers kept, running headers removed, headings detected, tables extracted intact, OCR for scans | `ingest/parse.py` |
 | Chunking | *Naive* fixed windows vs *structured* chunks that follow sections and keep tables whole | `ingest/chunk.py` |
 | Indexes | BM25 (exact terms like "Fungu 46"), bge-m3 vectors (meaning, cross-lingual), SQLite budget tables | `index/` |
@@ -122,7 +122,7 @@ make fetch && make ingest                      # download and parse the corpus
 make index-smoke                               # CPU pipeline check with hashing vectors
 ```
 
-Three documents (the 2024/25 and 2025/26 speeches) have no stable download link;
+Three documents (the 2024/25 Swahili and 2025/26 speeches) have no stable download link;
 `make fetch` prints where to get each one and the filename to save it as.
 
 On a GPU machine, for real embeddings and a local model:
@@ -191,7 +191,7 @@ tests/              unit and end-to-end tests on a synthetic budget-speech PDF
 
 | Type | Fiscal years |
 |---|---|
-| Budget speeches | 2018/19 (sw), 2019/20 (en), 2020/21 (en), 2021/22 (sw, en), 2024/25 (sw), 2025/26 (sw, en) |
+| Budget speeches | 2018/19 (sw), 2019/20 (sw, en), 2020/21 (en), 2021/22 (sw, en), 2024/25 (sw, en), 2025/26 (sw, en) |
 | Finance Acts | 2021, 2025 |
 | Development estimates (Volume IV) | 2025/26, 2026/27 |
 
@@ -200,7 +200,7 @@ should be treated as unanswerable until they are added to `data/corpus.yaml`.
 
 Documents are published by the Ministry of Finance of the United Republic of Tanzania
 ([mof.go.tz](https://www.mof.go.tz), [repository.mof.go.tz](https://repository.mof.go.tz)) and
-TanzLII. They are downloaded from their official sources and are not redistributed here.
+TanzLII and the Parliament of Tanzania ([parliament.go.tz](https://www.parliament.go.tz)). They are downloaded from their official sources and are not redistributed here.
 
 ## License
 

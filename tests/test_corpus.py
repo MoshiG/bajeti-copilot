@@ -99,3 +99,13 @@ def test_fetch_only_limits_documents(tmp_path):
     manifest = Manifest(documents=[_doc(id="a", url="https://x/a"), _doc(id="b", url="https://x/b")])
     results = fetch_all(manifest, tmp_path, only={"a"}, get=lambda url: PDF)
     assert [r.id for r in results] == ["a"]
+
+
+def test_downloads_keep_certificate_verification_on():
+    import ssl
+
+    from bajeti.corpus import ssl_context
+
+    ctx = ssl_context()
+    if ctx is not None:                      # truststore installed
+        assert ctx.verify_mode == ssl.CERT_REQUIRED and ctx.check_hostname

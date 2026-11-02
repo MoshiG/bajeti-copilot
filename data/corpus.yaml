@@ -7,7 +7,9 @@
 # Source kinds:
 #   url:          a direct PDF link
 #   dspace_item:  a Ministry of Finance repository item (repository.mof.go.tz); the script asks
-#                 the repository's REST API for the file whose name contains `file_match`
+#                 the repository's REST API for the file whose name contains `file_match`.
+#                 Prefer a direct www.mof.go.tz link when one exists: the repository server
+#                 often cuts downloads short.
 #   manual: true  no stable link yet; download it from `page` and save as data/raw/<id>.pdf
 #
 # Fields: id, title, doc_type (speech | finance_act | estimates), fiscal_year, language (sw | en)
@@ -30,7 +32,7 @@ documents:
     fiscal_year: "2025/26"
     language: en
     manual: true
-    page: "https://repository.mof.go.tz/collections/1f99dbcb-70c7-4458-9496-2097d6f0f0db"
+    page: "https://repository.mof.go.tz/items/519d3660-e470-47d0-9563-a86f865f8b1b/full"
 
   - id: speech_2024_25_sw
     title: "Hotuba ya Bajeti Kuu ya Serikali 2024/25"
@@ -39,6 +41,13 @@ documents:
     language: sw
     manual: true
     page: "https://repository.mof.go.tz/collections/1f99dbcb-70c7-4458-9496-2097d6f0f0db"
+
+  - id: speech_2024_25_en
+    title: "Government Budget Speech 2024/25"
+    doc_type: speech
+    fiscal_year: "2024/25"
+    language: en
+    url: "https://www.mof.go.tz/uploads/documents/en-1728554283-2024-25 Budget Speech Final.pdf"
 
   - id: speech_2021_22_sw
     title: "Hotuba ya Bajeti Kuu ya Serikali 2021/22"
@@ -52,8 +61,7 @@ documents:
     doc_type: speech
     fiscal_year: "2021/22"
     language: en
-    dspace_item: "ef159785-3e00-4613-9099-bd65de76ec49"
-    file_match: "SPEECH OF GOVERNMENT BUDGET"
+    url: "https://www.mof.go.tz/uploads/documents/en-1676533782-SPEECH OF GOVERNMENT BUDGET FOR 2021-22.pdf"
     page: "https://repository.mof.go.tz/items/ef159785-3e00-4613-9099-bd65de76ec49/full"
 
   - id: speech_2020_21_en
@@ -61,8 +69,7 @@ documents:
     doc_type: speech
     fiscal_year: "2020/21"
     language: en
-    dspace_item: "a0163214-8b28-4583-b6d0-92203ca1d930"
-    file_match: "SPEECH"
+    url: "https://www.mof.go.tz/uploads/documents/en-1676533904-SPEECH OF GOVERNMENT BUDGET FOR 2020-21.pdf"
     page: "https://repository.mof.go.tz/items/a0163214-8b28-4583-b6d0-92203ca1d930/full"
 
   - id: speech_2019_20_en
@@ -70,9 +77,15 @@ documents:
     doc_type: speech
     fiscal_year: "2019/20"
     language: en
-    dspace_item: "25c7d7e1-34f4-4d8e-8982-219000f428d1"
-    file_match: "SPEECH"
+    url: "https://www.mof.go.tz/uploads/documents/en-1676533972-SPEECH OF GOVERNMENT BUDGET FOR 2019-20.pdf"
     page: "https://repository.mof.go.tz/items/25c7d7e1-34f4-4d8e-8982-219000f428d1/full"
+
+  - id: speech_2019_20_sw
+    title: "Hotuba ya Bajeti Kuu ya Serikali 2019/20"
+    doc_type: speech
+    fiscal_year: "2019/20"
+    language: sw
+    url: "https://www.parliament.go.tz/uploads/documents/sw-1738845772-HOTUBA BAJETI F 2019 20.pdf"
 
   - id: speech_2018_19_sw
     title: "Hotuba ya Bajeti Kuu ya Serikali 2018/19"

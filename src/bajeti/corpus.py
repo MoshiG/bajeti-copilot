@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import ssl
 import time
 import urllib.parse
 import urllib.request
@@ -90,15 +91,34 @@ def quote_url(url: str) -> str:
     return urllib.parse.urlunsplit(parts._replace(path=path))
 
 
+def ssl_context() -> ssl.SSLContext | None:
+    """Verify certificates with the operating system's trust store when possible.
+
+    Some government servers send an incomplete certificate chain. Browsers and the OS verifier
+    fetch the missing intermediate certificate; Python's default OpenSSL context does not, and
+    fails with CERTIFICATE_VERIFY_FAILED. truststore hands verification to the OS (Keychain on
+    macOS), so certificates are still verified. Verification is never switched off.
+    """
+    try:
+        import truststore
+    except ImportError:
+        return None
+    return truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+
+
 def http_get(url: str, retries: int = 3, timeout: int = 60) -> bytes:
     last: Exception | None = None
+    context = ssl_context()
     for attempt in range(retries):
         try:
             req = urllib.request.Request(quote_url(url), headers={"User-Agent": USER_AGENT})
-            with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310 (fixed hosts)
+            with urllib.request.urlopen(req, timeout=timeout,  # noqa: S310 (fixed hosts)
+                                        context=context) as resp:
                 return resp.read()
         except Exception as exc:  # network errors vary by platform
             last = exc
+            if isinstance(getattr(exc, "reason", None), ssl.SSLCertVerificationError):
+                break                       # retrying will not fix a certificate problem
             time.sleep(2**attempt)
     raise RuntimeError(f"GET {url} failed after {retries} attempts: {last}")
 
