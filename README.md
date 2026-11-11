@@ -18,6 +18,23 @@ counted, not just prevented.
 > **Not official advice.** Built on public Ministry of Finance documents for research and
 > demonstration. Always check figures in the cited document.
 
+## Why it exists
+
+Budget decisions in public financial management depend on figures spread across speeches, Finance
+Acts and thousands of pages of estimates, in two languages. This project tests how far an LLM
+decision-support tool can be trusted with that material, and makes every answer checkable by
+someone who is not technical.
+
+- **Data integrity first.** The 2025/26 and 2026/27 development estimates (6,543 projects) are
+  parsed and reconciled against every sub-vote, vote and grand total printed in the documents.
+  Checking the grand total caught a TZS 193.5 billion row the parser had missed.
+- **Retrieval and tool use, not free generation.** Hybrid search for policy text, read-only SQL
+  for figures, and an exact optimiser that ranks interventions against a budget ceiling.
+- **Explainable by design.** Every claim cites a document and page; invented citations and
+  figures not found in the evidence are caught in code and shown to the user.
+- **Evaluated, not demoed.** Each component's contribution is measured by ablation, with
+  confidence intervals and a breakdown of where each wrong answer failed.
+
 ## What it does
 
 - **Ask in either language.** "Wizara ya Afya imetengewa kiasi gani 2025/26?" or "How did Vote 52
