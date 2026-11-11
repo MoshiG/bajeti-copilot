@@ -77,10 +77,12 @@ def _build(path):
          "Commission", True),
         ("043", "Direct Transfer to Tanzania Cashewnut Board",
          {0: "-", 1: "-", 2: "-", 3: "-", 4: "-", 5: "-", 6: "284,502,389,400"}, None, False),
+        ("052-", "Direct Transfer to Universal Health Insurance Fund",   # dash against the code
+         {0: "-", 1: "-", 2: "-", 3: "-", 4: "-", 5: "-", 6: "193,519,348,100"}, None, False),
     ]
     y = 90
     for code, name, cells, tail, next_line in rows:
-        _left(s, f"{code} - {name}", 50, y, SFS)
+        _left(s, f"{code} {name}" if code.endswith("-") else f"{code} - {name}", 50, y, SFS)
         ay = y + 12 if next_line else y
         for col, v in cells.items():
             _right(s, v, S_RIGHT[col], ay, SFS)
@@ -143,7 +145,7 @@ def test_amount_tokens(token, value):
 
 def test_summary_rows_by_column_position(parsed):
     rows = {r.vote_code: r for r in parsed.summary}
-    assert set(rows) == {"001", "002", "024", "043"}
+    assert set(rows) == {"001", "002", "024", "043", "052"}
     debt = rows["001"]                     # long right-aligned total must land in 'total'
     assert debt.oc_tzs == debt.total_tzs == 14_219_350_702_000 and debt.lga_dev_tzs == 0
     tsc = rows["002"]                      # blank cells: values must not shift left
@@ -161,6 +163,12 @@ def test_wrapped_name_and_amounts_on_next_line(parsed):
 def test_total_only_direct_transfer_row(parsed):
     row = next(r for r in parsed.summary if r.vote_code == "043")
     assert row.total_tzs == 284_502_389_400 and row.pe_tzs == row.dev_local_tzs == 0
+
+
+def test_row_with_dash_printed_against_the_code(parsed):
+    row = next(r for r in parsed.summary if r.vote_code == "052")
+    assert row.vote_name == "Direct Transfer to Universal Health Insurance Fund"
+    assert row.total_tzs == 193_519_348_100
 
 
 def test_projects_with_first_page_intro_and_page_break(parsed):
@@ -181,7 +189,7 @@ def test_every_printed_total_reconciles(parsed):
     rec = reconcile(parsed)
     assert rec["subvote_totals_matched"] == [2, 2]          # incl. the wrapped total
     assert rec["vote_totals_matched"] == [1, 1]
-    assert rec["summary_rows_add_up"] == [4, 4]
+    assert rec["summary_rows_add_up"] == [5, 5]
     assert not rec["mismatches"]
 
 
@@ -201,7 +209,7 @@ def test_database_tables_and_citations(parsed, tmp_path):
     stats = build_budget_db([], db, [{"doc_id": "volume_iv_test", "title": "Volume IV 2025/26",
                                       "doc_type": "estimates", "fiscal_year": "2025/26",
                                       "language": "en"}], parsed.to_records())
-    assert stats["projects"] == 3 and stats["vote_summary"] == 4
+    assert stats["projects"] == 3 and stats["vote_summary"] == 5
     view = run_readonly(db, "SELECT est_total_tzs, pages FROM project_votes "
                             "WHERE vote_code='002'").rows
     assert view == [(1_942_723_000, "2,3")]
@@ -232,4 +240,4 @@ def test_pipeline_runs_parser_and_reports(tmp_path, monkeypatch):
     report = ingest_corpus(cfg, Manifest(documents=[doc]))[0]
     assert report.estimates["projects"] == 3 and report.estimates["vote_totals_matched"] == [1, 1]
     saved = json.loads((tmp_path / "p" / "estimates.json").read_text())
-    assert len(saved["projects"]) == 3 and len(saved["vote_summary"]) == 4
+    assert len(saved["projects"]) == 3 and len(saved["vote_summary"]) == 5

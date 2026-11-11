@@ -163,15 +163,22 @@ HEADER_WORDS = re.compile(r"emoluments|\((PE|OC)\)|ownsource|expenditure|charges
 
 def _split_name(ln: Line) -> tuple[str, str, int] | None:
     """'003 - National Land Use Planning Commission   4,423,468,000 ...' -> (code, name, index
-    of the first value cell). Names can contain ' - ', so the boundary is the first wide gap."""
-    if len(ln.words) < 3 or ln.words[1] != "-" or not SUMMARY_ROW.match(ln.text):
+    of the first value cell). Names can contain ' - ', so the boundary is the first wide gap.
+    The dash is sometimes printed against the code ('052- Direct Transfer to ...')."""
+    if not SUMMARY_ROW.match(ln.text):
+        return None
+    if len(ln.words) >= 3 and ln.words[1] == "-":
+        code, start = ln.words[0], 2
+    elif len(ln.words) >= 2 and re.fullmatch(r"[0-9A-Z]{2,4}-", ln.words[0]):
+        code, start = ln.words[0][:-1], 1
+    else:
         return None
     split = len(ln.words)
-    for i in range(3, len(ln.words)):
+    for i in range(start + 1, len(ln.words)):
         if ln.xs[i] - ln.ends[i - 1] > NAME_GAP:
             split = i
             break
-    return ln.words[0], " ".join(ln.words[2:split]), split
+    return code, " ".join(ln.words[start:split]), split
 
 
 def _is_amounts_only(ln: Line) -> bool:

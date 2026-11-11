@@ -88,7 +88,7 @@ totals the Ministry printed:
 | Document | Projects | Sub-vote totals reconciled | Vote totals reconciled | Vote summary rows adding up |
 |---|---|---|---|---|
 | Volume IV 2025/26 | 3,248 | 758 / 758 | 85 / 85 | 95 / 95 |
-| Volume IV 2026/27 | 3,295 | 857 / 857 | 85 / 85 | 103 / 103 |
+| Volume IV 2026/27 | 3,295 | 857 / 857 | 85 / 85 | 104 / 104 |
 
 `make ingest` reprints this check on every run.
 
