@@ -62,7 +62,31 @@ CREATE TABLE allocations (
     local_tzs REAL, foreign_tzs REAL, total_tzs REAL,
     unit_multiplier REAL, is_total_row INTEGER DEFAULT 0
 );
+CREATE TABLE projects (
+    id INTEGER PRIMARY KEY, doc_id TEXT, fiscal_year TEXT, page_no INTEGER,
+    vote_code TEXT, vote_name TEXT, sub_vote_code TEXT, sub_vote_name TEXT,
+    project_code TEXT, project_name TEXT, actual_year TEXT, approved_year TEXT,
+    actual_local_tzs REAL, actual_forex_tzs REAL, approved_local_tzs REAL,
+    approved_forex_tzs REAL, est_local_tzs REAL, est_forex_tzs REAL, est_total_tzs REAL,
+    funding TEXT, crd TEXT, donor TEXT
+);
+CREATE TABLE printed_totals (
+    doc_id TEXT, page_no INTEGER, level TEXT, vote_code TEXT, sub_vote_code TEXT,
+    est_local_tzs REAL, est_forex_tzs REAL, est_total_tzs REAL
+);
+CREATE TABLE vote_summary (
+    doc_id TEXT, fiscal_year TEXT, page_no INTEGER, section TEXT, vote_code TEXT,
+    vote_name TEXT, pe_tzs REAL, oc_tzs REAL, lga_oc_tzs REAL, dev_local_tzs REAL,
+    dev_foreign_tzs REAL, lga_dev_tzs REAL, total_tzs REAL
+);
+CREATE INDEX ix_proj_vote ON projects (fiscal_year, vote_code);
 CREATE INDEX ix_alloc_vote ON allocations (fiscal_year, vote_code);
+CREATE VIEW project_votes AS
+    SELECT doc_id, fiscal_year, vote_code, MAX(vote_name) AS vote_name,
+           SUM(est_local_tzs) AS est_local_tzs, SUM(est_forex_tzs) AS est_forex_tzs,
+           SUM(est_total_tzs) AS est_total_tzs, COUNT(*) AS n_projects,
+           MIN(page_no) AS page_no, GROUP_CONCAT(DISTINCT page_no) AS pages
+    FROM projects GROUP BY doc_id, fiscal_year, vote_code;
 CREATE INDEX ix_cells_table ON raw_cells (table_id);
 CREATE VIEW vote_totals AS
     SELECT doc_id, fiscal_year, vote_code, MAX(vote_name) AS vote_name,
@@ -74,10 +98,28 @@ CREATE VIEW vote_totals AS
 """
 
 SCHEMA_NOTES = """\
+Which table to use:
+- vote_summary: one row per vote from the Volume IV 'approved budget by major categories' page:
+  pe_tzs (personnel), oc_tzs (other charges), lga_oc_tzs, dev_local_tzs, dev_foreign_tzs,
+  lga_dev_tzs and total_tzs. Use it for a vote's total, recurrent or development budget.
+  Rows whose name starts 'Direct Transfer' carry a total only.
+- projects: one row per development project in Volume IV, with its sub-vote, the estimate for
+  the document's year (est_local_tzs, est_forex_tzs, est_total_tzs) and, for comparison, the
+  approved estimate of the previous year (approved_year, approved_local_tzs,
+  approved_forex_tzs) and actual spending two years earlier (actual_year, actual_*).
+  funding is the printed Loan/Grant code; donor is the printed donor code.
+- project_votes: projects summed per vote, with every page cited.
+- For regional votes (RAS ...), the vote summary's development figure and the project pages'
+  total are defined differently (transfers to local government authorities). Say which table
+  a figure comes from.
+- allocations / vote_totals: figures from tables inside the budget speeches.
+
 Notes for writing queries:
 - All money columns (*_tzs) are in Tanzanian shillings, already multiplied out from the units
   printed in the source tables.
-- fiscal_year looks like '2025/26'. vote_code is the vote number as text, e.g. '46'.
+- fiscal_year looks like '2025/26'. vote_code is the vote number as text, as printed:
+  three digits in vote_summary and projects ('052' for Vote 52). To match any form, compare
+  CAST(vote_code AS INTEGER) = 52.
 - Rows with is_total_row = 1 are subtotals copied from the documents; exclude them when summing,
   or use the vote_totals view, which already does.
 - The same vote can appear in several documents (a speech and the Volume IV estimates); filter
@@ -233,6 +275,7 @@ def build_budget_db(
     tables: list[dict[str, Any]],
     db_path: str | Path,
     documents: Iterable[dict[str, Any]] = (),
+    estimates: dict[str, list[dict[str, Any]]] | None = None,
 ) -> dict[str, int]:
     path = Path(db_path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -257,6 +300,10 @@ def build_budget_db(
         ]
         conn.executemany("INSERT INTO raw_cells VALUES (?,?,?,?,?,?,?,?,?)", cells)
         n_cells += len(cells)
+        # Volume IV figures come from the layout-specific parser; generic table extraction on
+        # those documents would only add partial duplicates.
+        if t.get("doc_type") == "estimates" and estimates:
+            continue
         alloc = _allocation_rows(t, states.setdefault(t["doc_id"], _DocState()))
         if alloc:
             cols = list(alloc[0])
@@ -266,10 +313,20 @@ def build_budget_db(
                 alloc,
             )
             n_alloc += len(alloc)
+    counts = {}
+    for table, rows in (estimates or {}).items():
+        if table not in ("projects", "printed_totals", "vote_summary") or not rows:
+            counts[table] = 0
+            continue
+        cols = list(rows[0])
+        conn.executemany(f"INSERT INTO {table} ({', '.join(cols)}) "
+                         f"VALUES ({', '.join(':' + c for c in cols)})", rows)
+        counts[table] = len(rows)
     conn.commit()
     conn.close()
     tmp.replace(path)                   # atomic swap: queries never see a half-built database
-    return {"tables": len(tables), "cells": n_cells, "allocation_rows": n_alloc}
+    return {"tables": len(tables), "cells": n_cells, "allocation_rows": n_alloc,
+            "projects": counts.get("projects", 0), "vote_summary": counts.get("vote_summary", 0)}
 
 
 # --- read-only querying (used by the query_budget tool) -------------------------------------
@@ -355,9 +412,13 @@ def schema_description(db_path: str | Path) -> str:
         years = [r[0] for r in conn.execute(
             "SELECT DISTINCT fiscal_year FROM allocations ORDER BY 1")]
         n = conn.execute("SELECT COUNT(*) FROM allocations").fetchone()[0]
+        n_proj = conn.execute("SELECT COUNT(*) FROM projects").fetchone()[0]
+        proj_years = [r[0] for r in conn.execute(
+            "SELECT DISTINCT fiscal_year FROM projects ORDER BY 1")]
     finally:
         conn.close()
-    facts = f"allocations has {n} rows covering fiscal years: {', '.join(years) or 'none'}."
+    facts = (f"allocations has {n} rows covering fiscal years: {', '.join(years) or 'none'}. "
+             f"projects has {n_proj} rows covering: {', '.join(proj_years) or 'none'}.")
     return "\n\n".join(ddl) + "\n\n" + facts + "\n" + SCHEMA_NOTES
 
 

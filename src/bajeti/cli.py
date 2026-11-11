@@ -53,6 +53,16 @@ def _cmd_ingest(args: argparse.Namespace) -> int:
     for r in reports:
         print(f"{r.doc_id:22} {r.status:8} {r.pages:>5} {r.ocr_pages:>4} {r.tables:>6} "
               f"{r.chunks.get('naive', 0):>6} {r.chunks.get('structured', 0):>6}  {r.message}")
+    for r in reports:
+        e = r.estimates
+        if e and "error" in e:
+            print(f"\n{r.doc_id}: estimates parser failed: {e['error']}")
+        elif e:
+            sv, v, sm = (e["subvote_totals_matched"], e["vote_totals_matched"],
+                         e["summary_rows_add_up"])
+            print(f"\n{r.doc_id}: {e['projects']} projects in {e['votes']} votes; printed totals "
+                  f"reconciled: sub-votes {sv[0]}/{sv[1]}, votes {v[0]}/{v[1]}; vote summary "
+                  f"rows adding up {sm[0]}/{sm[1]}")
     return 1 if any(r.status == "failed" for r in reports) else 0
 
 
@@ -71,7 +81,9 @@ def _cmd_index(args: argparse.Namespace) -> int:
         print(f"  dense/{strategy:11} {r['status']:8} {detail}")
     db = report["budget_db"]
     print(f"  budget.sqlite        {db['tables']} tables, {db['cells']} cells, "
-          f"{db['allocation_rows']} allocation rows" if db else "  budget.sqlite        skipped")
+          f"{db['allocation_rows']} allocation rows, {db.get('projects', 0)} projects, "
+          f"{db.get('vote_summary', 0)} vote summary rows"
+          if db else "  budget.sqlite        skipped")
     return 0
 
 

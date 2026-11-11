@@ -5,6 +5,8 @@ data/processed/
     chunks_naive.jsonl           input to ablation rows 1-3
     chunks_structured.jsonl      input to ablation rows 4-5
     tables.jsonl                 every extracted table, for the SQLite budget database
+    estimates.json               Volume IV projects, printed totals and vote summary rows, parsed
+                                 by a layout-specific parser (see ingest/estimates.py)
     ingest_report.json           per-document stats: pages, OCR'd pages, tables, chunks
 """
 
@@ -20,6 +22,7 @@ from typing import Any
 from bajeti.config import Config
 from bajeti.corpus import Document, Manifest
 from bajeti.ingest.chunk import Chunk, chunk_pages
+from bajeti.ingest.estimates import parse_estimates, reconcile
 from bajeti.ingest.parse import Page, parse_pdf
 
 log = logging.getLogger(__name__)
@@ -34,6 +37,7 @@ class DocReport:
     ocr_pages: int = 0
     tables: int = 0
     chunks: dict[str, int] = field(default_factory=dict)
+    estimates: dict[str, Any] | None = None     # reconciliation, for doc_type "estimates"
     message: str = ""
 
 
@@ -72,6 +76,8 @@ def ingest_corpus(
     pages_dir = out_dir / "pages"
     all_chunks: dict[str, list[Chunk]] = {s: [] for s in STRATEGIES}
     tables: list[dict[str, Any]] = []
+    estimates: dict[str, list[dict[str, Any]]] = {"projects": [], "printed_totals": [],
+                                                  "vote_summary": []}
     reports: list[DocReport] = []
 
     for doc in manifest.documents:
@@ -100,6 +106,17 @@ def ingest_corpus(
                     "page_no": p.page_no, "rows": b.rows,
                 })
                 report.tables += 1
+        if doc.doc_type == "estimates":
+            try:
+                parsed = parse_estimates(raw_dir / doc.filename, doc.id, doc.fiscal_year)
+                for key, rows in parsed.to_records().items():
+                    estimates[key].extend(rows)
+                rec = reconcile(parsed)
+                rec["mismatches"] = rec["mismatches"][:20]
+                report.estimates = rec
+            except Exception as exc:  # a layout surprise must not stop the other documents
+                log.exception("estimates parser failed on %s", doc.id)
+                report.estimates = {"error": str(exc)}
         for strategy in STRATEGIES:
             chunks = chunk_pages(pages, doc, strategy, cfg.ingest.chunk_tokens,
                                  cfg.ingest.chunk_overlap)
@@ -112,6 +129,8 @@ def ingest_corpus(
         for strategy, chunks in all_chunks.items():
             _write_jsonl(out_dir / f"chunks_{strategy}.jsonl", (c.to_dict() for c in chunks))
         _write_jsonl(out_dir / "tables.jsonl", tables)
+        (out_dir / "estimates.json").write_text(json.dumps(estimates, ensure_ascii=False),
+                                                encoding="utf-8")
     (out_dir / "ingest_report.json").write_text(
         json.dumps([r.__dict__ for r in reports], indent=2), encoding="utf-8"
     )

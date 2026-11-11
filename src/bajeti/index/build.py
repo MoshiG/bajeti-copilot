@@ -54,8 +54,11 @@ def build_indexes(
     tables_file = Path(cfg.paths.processed_dir) / "tables.jsonl"
     if tables_file.exists():
         documents = [{**asdict(d), "doc_id": d.id} for d in manifest.documents] if manifest else []
+        est_file = Path(cfg.paths.processed_dir) / "estimates.json"
+        estimates = json.loads(est_file.read_text(encoding="utf-8")) if est_file.exists() \
+            else None
         report["budget_db"] = build_budget_db(load_tables(tables_file), cfg.paths.sqlite_path,
-                                              documents)
+                                              documents, estimates)
 
     out = Path(cfg.paths.index_dir) / "index_report.json"
     out.parent.mkdir(parents=True, exist_ok=True)

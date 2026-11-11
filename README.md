@@ -51,6 +51,7 @@ flowchart LR
 |---|---|---|
 | Corpus | 14 documents listed with their sources (see [Data](#data)); SHA-256 lock file | `data/corpus.yaml`, `corpus.py` |
 | Parsing | Page numbers kept, running headers removed, headings detected, tables extracted intact, OCR for scans | `ingest/parse.py` |
+| Budget estimates | Layout-specific parser for the Volume IV development estimates: every project, sub-vote and vote, checked against the totals printed in the document | `ingest/estimates.py` |
 | Chunking | *Naive* fixed windows vs *structured* chunks that follow sections and keep tables whole | `ingest/chunk.py` |
 | Indexes | BM25 (exact terms like "Fungu 46"), bge-m3 vectors (meaning, cross-lingual), SQLite budget tables | `index/` |
 | Retrieval | BM25 + dense fused with reciprocal rank fusion, then a cross-encoder reranker | `retrieval.py` |
@@ -78,6 +79,19 @@ judge found supported, alongside the judge's agreement with human labels.
 > **Pending.** Each evaluation record says whether a miss was *never retrieved*, *retrieved but
 > ranked out of the top 6*, or *retrieved but answered wrongly*.
 
+### Extraction accuracy
+
+The Volume IV estimates have no ruling lines, so general table extraction misses them. A
+layout-specific parser reads them from word positions, and its output is checked against the
+totals the Ministry printed:
+
+| Document | Projects | Sub-vote totals reconciled | Vote totals reconciled | Vote summary rows adding up |
+|---|---|---|---|---|
+| Volume IV 2025/26 | 3,248 | 758 / 758 | 85 / 85 | 95 / 95 |
+| Volume IV 2026/27 | 3,295 | 857 / 857 | 85 / 85 | 103 / 103 |
+
+`make ingest` reprints this check on every run.
+
 ## Guardrails
 
 | Risk | Guardrail | Enforced by |
@@ -103,9 +117,13 @@ judge found supported, alongside the judge's agreement with human labels.
   many figures, a wrong amount can match by coincidence.
 - **Refusals are detected by an exact phrase.** A model that declines in other words is counted
   as not refusing, which lowers refusal accuracy and can also hide false refusals.
-- **Table extraction depends on PDF layout.** Tables that are scanned or drawn without ruling
-  lines may extract poorly. Units are read from header rows only. `raw_cells` keeps every
-  extracted cell for inspection.
+- **Table extraction depends on PDF layout.** The Volume IV parser is specific to that
+  document's layout and is verified against its printed totals; tables inside the speeches use
+  general extraction, which can miss tables drawn without ruling lines. Units are read from
+  header rows only. `raw_cells` keeps every extracted cell for inspection.
+- **Two tables can define a figure differently.** For regional (RAS) votes, the Volume IV
+  vote summary and the project pages count transfers to local government authorities
+  differently, so a vote's "development budget" depends on the table; answers say which.
 - **Retrieved text is not sanitised against instructions embedded in documents.** The risk is low
   for official PDFs, and every tool is read-only.
 - **Judge claims are not independent.** Claims from the same answer are correlated, so judge
