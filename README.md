@@ -210,7 +210,7 @@ tests/              unit and end-to-end tests on a synthetic budget-speech PDF
 | Type | Fiscal years |
 |---|---|
 | Budget speeches | 2018/19 (sw), 2019/20 (sw, en), 2020/21 (en), 2021/22 (sw, en), 2024/25 (sw, en), 2025/26 (sw, en) |
-| Finance Acts | 2021, 2025 |
+| Finance Acts | 2021 (enacted), 2025 (the Bill as published on 12 June 2025) |
 | Development estimates (Volume IV) | 2025/26, 2026/27 |
 
 The corpus does not yet include the 2022/23 and 2023/24 speeches; questions about those years

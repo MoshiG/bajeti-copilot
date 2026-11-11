@@ -96,7 +96,9 @@ documents:
 
   # --- Finance Acts --------------------------------------------------------------------------
   - id: finance_act_2025
-    title: "The Finance Act, 2025"
+    # The file at this URL is the Bill as published in the Special Bill Supplement of
+    # 12 June 2025, not the enacted Act; the enacted text may differ.
+    title: "The Finance Bill, 2025"
     doc_type: finance_act
     fiscal_year: "2025/26"
     language: en
